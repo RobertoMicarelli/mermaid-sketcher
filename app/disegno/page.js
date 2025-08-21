@@ -215,6 +215,51 @@ export default function Disegno() {
     el.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.6) inset';
   }, [brushSize, isEraser]);
 
+  // Funzione per pulire completamente canvas e stato
+  const clearAll = () => {
+    // Pulisci sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('generated_mermaid_code');
+      sessionStorage.removeItem('ocr_text');
+      sessionStorage.removeItem('analysis_type');
+      sessionStorage.removeItem('model_used');
+    }
+
+    // Pulisci canvas di disegno
+    const drawCanvas = drawCanvasRef.current;
+    if (drawCanvas) {
+      const drawCtx = drawCanvas.getContext('2d');
+      const rect = drawCanvas.getBoundingClientRect();
+      const canvasWidth = Math.max(1, Math.floor(rect.width));
+      const canvasHeight = Math.max(1, Math.floor(rect.height));
+      drawCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+    }
+
+    // Pulisci canvas di background (solo disegno, mantieni immagine se presente)
+    const bgCanvas = bgCanvasRef.current;
+    if (bgCanvas) {
+      const bgCtx = bgCanvas.getContext('2d');
+      const rect = bgCanvas.getBoundingClientRect();
+      const canvasWidth = Math.max(1, Math.floor(rect.width));
+      const canvasHeight = Math.max(1, Math.floor(rect.height));
+      
+      // Ridisegna solo lo sfondo bianco + immagine (se presente)
+      redrawBackground();
+    }
+
+    // Pulisci stato
+    setUploadedImage(null);
+    setIsProcessing(false);
+    setProcessingStep('');
+
+    // Pulisci file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    console.log('Pulizia completa eseguita');
+  };
+
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -555,6 +600,44 @@ export default function Disegno() {
                       <span>1px</span>
                       <span className="font-medium">{brushSize}px</span>
                       <span>20px</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-[#637488] mb-3 font-semibold">Pulizia</h3>
+                    <div className="space-y-2">
+                      <button 
+                        onClick={clearAll}
+                        className="w-full flex items-center justify-center gap-2 rounded-md h-10 px-4 text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                        title="Pulisci tutto: canvas, cache e stato"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        Pulisci Tutto
+                      </button>
+                      <button 
+                        onClick={() => {
+                          // Pulisci solo la cache del server
+                          fetch('/api/clear-cache', { method: 'POST' })
+                            .then(response => response.json())
+                            .then(data => {
+                              console.log('Cache server pulita:', data);
+                              alert(`Cache server pulita: ${data.clearedItems} elementi rimossi`);
+                            })
+                            .catch(error => {
+                              console.error('Errore pulizia cache:', error);
+                              alert('Errore durante la pulizia della cache');
+                            });
+                        }}
+                        className="w-full flex items-center justify-center gap-2 rounded-md h-10 px-4 text-sm font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors"
+                        title="Pulisci solo la cache del server"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Pulisci Cache Server
+                      </button>
                     </div>
                   </div>
                   
