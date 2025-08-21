@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 export default function Home() {
   const router = useRouter();
   const [showSettings, setShowSettings] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [model, setModel] = useState('gpt-4');
   const [hasKey, setHasKey] = useState(false);
@@ -71,10 +72,8 @@ export default function Home() {
       <header className="p-6">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <svg className="h-8 w-8 text-[#0d78f2]" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path clipRule="evenodd" d="M39.475 21.6262C40.358 21.4363 40.6863 21.5589 40.7581 21.5934C40.7876 21.655 40.8547 21.857 40.8082 22.3336C40.7408 23.0255 40.4502 24.0046 39.8572 25.2301C38.6799 27.6631 36.5085 30.6631 33.5858 33.5858C30.6631 36.5085 27.6632 38.6799 25.2301 39.8572C24.0046 40.4502 23.0255 40.7407 22.3336 40.8082C21.8571 40.8547 21.6551 40.7875 21.5934 40.7581C21.5589 40.6863 21.4363 40.358 21.6262 39.475C21.8562 38.4054 22.4689 36.9657 23.5038 35.2817C24.7575 33.2417 26.5497 30.9744 28.7621 28.762C30.9744 26.5497 33.2417 24.7574 35.2817 23.5037C36.9657 22.4689 38.4054 21.8562 39.475 21.6262ZM4.41189 29.2403L18.7597 43.5881C19.8813 44.7097 21.4027 44.9179 22.7217 44.7893C24.0585 44.659 25.5148 44.1631 26.9723 43.4579C29.9052 42.0387 33.2618 39.5667 36.4142 36.4142C39.5667 33.2618 42.0387 29.9052 43.4579 26.9723C44.1631 25.5148 44.659 24.0585 44.7893 22.7217C44.9179 21.4027 44.7097 19.8813 43.5881 18.7597L29.2403 4.41187C27.8527 3.02428 25.8765 3.02573 24.2861 3.36776C22.6081 3.72863 20.7334 4.58419 18.8396 5.74801C16.4978 7.18716 13.9881 9.18353 11.5858 11.5858C9.18354 13.988 7.18717 16.4978 5.74802 18.8396C4.58421 20.7334 3.72865 22.6081 3.36778 24.2861C3.02574 25.8765 3.02429 27.8527 4.41189 29.2403Z" fill="currentColor" fillRule="evenodd"></path>
-            </svg>
-            <h1 className="text-xl font-bold text-[#111418]">Mermaid Code Generator</h1>
+            <img src="/loghi/logo192.png" alt="Logo" className="h-8 w-8" />
+            <h1 className="text-xl font-bold text-[#111418]">Mermaid Code Generator (By Roberto Micarelli)</h1>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -123,12 +122,24 @@ export default function Home() {
             Input massimo: 20.000 caratteri (~6 pagine). Riferimenti sintassi Mermaid: 
             <a className="text-[#0d78f2] underline ml-1" href="https://mermaid.js.org/intro/syntax-reference.html" target="_blank" rel="noreferrer">Documentazione ufficiale</a>
           </p>
+          <p className="mt-4 text-sm text-[#637488]">
+            <a 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                setShowVideo(true);
+              }}
+              className="text-[#0d78f2] underline hover:text-blue-800 cursor-pointer"
+            >
+              Guarda il video tutorial dell'APP
+            </a>
+          </p>
         </div>
       </main>
       
       <footer className="p-6">
         <div className="container mx-auto">
-          <p className="text-center text-sm text-[#637488]">© 2024 Mermaid Code Generator. Tutti i diritti riservati.</p>
+          <p className="text-center text-sm text-[#637488]">© 2024 Mermaid Code Generator. Tutti i diritti riservati (By Roberto Micarelli)</p>
         </div>
       </footer>
 
@@ -167,6 +178,33 @@ export default function Home() {
                 <button onClick={handleClearKey} className="text-red-600 text-sm font-medium">Rimuovi chiave</button>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {showVideo && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Video Tutorial Mermaid Code Generator</h3>
+              <button 
+                onClick={() => setShowVideo(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            <div style={{padding:'56.25% 0 0 0', position:'relative'}}>
+              <iframe 
+                src="https://player.vimeo.com/video/1112090722?h=9585e60e84&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" 
+                frameBorder="0" 
+                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" 
+                referrerPolicy="strict-origin-when-cross-origin" 
+                style={{position:'absolute', top:0, left:0, width:'100%', height:'100%'}} 
+                title="Tutorial Mermaid Code Generator"
+              />
+            </div>
+            <script src="https://player.vimeo.com/api/player.js"></script>
           </div>
         </div>
       )}
