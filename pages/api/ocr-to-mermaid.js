@@ -37,16 +37,30 @@ export default async function handler(req, res) {
 
     console.log('Avvio OCR per immagine...');
     
-    // Esegui OCR con Tesseract
-    const { data: { text } } = await Tesseract.recognize(
-      Buffer.from(imageData, 'base64'),
-      'ita+eng', // Lingue italiano e inglese
-      {
-        logger: m => console.log('OCR Progress:', m.status, m.progress)
-      }
-    );
-
-    console.log('OCR completato. Testo estratto:', text.substring(0, 100) + '...');
+    let text = '';
+    try {
+      // Esegui OCR con Tesseract con timeout e gestione errori
+      const ocrPromise = Tesseract.recognize(
+        Buffer.from(imageData, 'base64'),
+        'ita+eng', // Lingue italiano e inglese
+        {
+          logger: m => console.log('OCR Progress:', m.status, m.progress),
+          errorHandler: err => console.error('OCR Error:', err)
+        }
+      );
+      
+      // Timeout di 30 secondi per l'OCR
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('OCR Timeout')), 30000)
+      );
+      
+      const result = await Promise.race([ocrPromise, timeoutPromise]);
+      text = result.data.text;
+      console.log('OCR completato. Testo estratto:', text.substring(0, 100) + '...');
+    } catch (ocrError) {
+      console.error('Errore OCR o timeout, fallback ad analisi visiva pura:', ocrError);
+      text = ''; // Forza analisi visiva pura
+    }
 
     // Se non c'è testo, analizza solo la struttura visiva
     if (!text || text.trim().length < 10) {

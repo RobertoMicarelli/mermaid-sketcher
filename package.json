@@ -6,11 +6,16 @@
   "author": "Mermaid Sketcher Team",
   "license": "MIT",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "export": "next build && next export",
+    "deploy": "npm run build"
   },
   "dependencies": {
     "fabric": "^6.7.1",

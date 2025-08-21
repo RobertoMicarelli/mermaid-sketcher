@@ -1,0 +1,15 @@
+{
+  "functions": {
+    "pages/api/ocr-to-mermaid.js": {
+      "maxDuration": 60
+    },
+    "pages/api/generate-mermaid.js": {
+      "maxDuration": 60
+    }
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }
+}
