@@ -674,6 +674,7 @@ export default function Disegno() {
                     </div>
                   </div>
 
+                  {/* Sezione Debug temporaneamente nascosta
                   <div>
                     <h3 className="text-sm font-medium text-[#637488] mb-3 font-semibold">Debug</h3>
                     <div className="space-y-2">
@@ -691,24 +692,7 @@ export default function Disegno() {
                       </p>
                     </div>
                   </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-[#637488] mb-3 font-semibold">Debug</h3>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={disableCache}
-                          onChange={(e) => setDisableCache(e.target.checked)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">Disabilita Cache</span>
-                      </label>
-                      <p className="text-xs text-gray-500">
-                        {disableCache ? 'Cache disabilitata - ogni richiesta è nuova' : 'Cache abilitata - risultati salvati'}
-                      </p>
-                    </div>
-                  </div>
+                  */}
                   
                   <div className="border-t border-[#d1d5db] pt-6">
                     <h2 className="text-xl sm:text-2xl font-semibold mb-2">Immagini</h2>
