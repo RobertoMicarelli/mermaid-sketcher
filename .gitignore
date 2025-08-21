@@ -81,6 +81,8 @@ jspm_packages/
 
 # Tesseract.js training data (large files)
 *.traineddata
+*.traineddata.gz
+tessdata/
 
 # Temporary files
 tmp/

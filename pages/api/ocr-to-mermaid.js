@@ -39,13 +39,17 @@ export default async function handler(req, res) {
     
     let text = '';
     try {
-      // Esegui OCR con Tesseract con timeout e gestione errori
+      // Esegui OCR con Tesseract usando CDN per i file di training
       const ocrPromise = Tesseract.recognize(
         Buffer.from(imageData, 'base64'),
         'ita+eng', // Lingue italiano e inglese
         {
           logger: m => console.log('OCR Progress:', m.status, m.progress),
-          errorHandler: err => console.error('OCR Error:', err)
+          errorHandler: err => console.error('OCR Error:', err),
+          // Usa CDN per i file di training
+          workerPath: 'https://unpkg.com/tesseract.js@5/dist/worker.min.js',
+          langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+          corePath: 'https://unpkg.com/tesseract.js-core@5/tesseract-core.wasm.js'
         }
       );
       
@@ -267,7 +271,7 @@ Prima di tutto, esamina attentamente l'immagine e identifica:
 - Non assumere significati - descrivi esattamente ciò che vedi
 - Nota abbreviazioni, parole incomplete o grafie alternative
 - Segnala chiaramente le parole completamente illeggibili come [ILLEGGIBILE]
-
+ ad
 **CONNESSIONI E FLUSSO:**
 - Segui ogni freccia dalla sua origine alla destinazione
 - Identifica cicli e loop (frecce che tornano indietro)
