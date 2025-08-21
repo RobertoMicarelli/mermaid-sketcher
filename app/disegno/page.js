@@ -380,7 +380,42 @@ export default function Disegno() {
       const cctx = composite.getContext('2d');
       cctx.drawImage(bgCanvas, 0, 0);
       cctx.drawImage(drawCanvas, 0, 0);
-      const imageData = composite.toDataURL('image/png').split(',')[1];
+      
+      // Ridimensiona l'immagine se è troppo grande per Vercel
+      const maxSize = 1024; // Dimensione massima per lato
+      let finalCanvas = composite;
+      
+      if (composite.width > maxSize || composite.height > maxSize) {
+        const scale = Math.min(maxSize / composite.width, maxSize / composite.height);
+        const resizedCanvas = document.createElement('canvas');
+        resizedCanvas.width = Math.floor(composite.width * scale);
+        resizedCanvas.height = Math.floor(composite.height * scale);
+        const rctx = resizedCanvas.getContext('2d');
+        rctx.drawImage(composite, 0, 0, resizedCanvas.width, resizedCanvas.height);
+        finalCanvas = resizedCanvas;
+        console.log(`Immagine ridimensionata da ${composite.width}x${composite.height} a ${resizedCanvas.width}x${resizedCanvas.height}`);
+      }
+      
+      let imageData = finalCanvas.toDataURL('image/png', 0.8).split(',')[1];
+      
+      // Controlla la dimensione del payload (limite Vercel: ~4.5MB)
+      const payloadSize = new Blob([imageData]).size;
+      const maxPayloadSize = 4 * 1024 * 1024; // 4MB per sicurezza
+      
+      if (payloadSize > maxPayloadSize) {
+        console.warn(`Payload troppo grande (${Math.round(payloadSize / 1024 / 1024)}MB), ridimensionando ulteriormente...`);
+        // Ridimensiona ulteriormente
+        const furtherScale = Math.sqrt(maxPayloadSize / payloadSize);
+        const smallCanvas = document.createElement('canvas');
+        smallCanvas.width = Math.floor(finalCanvas.width * furtherScale);
+        smallCanvas.height = Math.floor(finalCanvas.height * furtherScale);
+        const sctx = smallCanvas.getContext('2d');
+        sctx.drawImage(finalCanvas, 0, 0, smallCanvas.width, smallCanvas.height);
+        imageData = smallCanvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+        console.log(`Immagine ulteriormente compressa a ${smallCanvas.width}x${smallCanvas.height}`);
+      }
+      
+      console.log(`Dimensione payload: ${Math.round(new Blob([imageData]).size / 1024 / 1024 * 100) / 100}MB`);
       
       setProcessingStep('Analisi OCR e visiva...');
 
@@ -640,6 +675,24 @@ export default function Disegno() {
                         </svg>
                         Pulisci Cache Server
                       </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-medium text-[#637488] mb-3 font-semibold">Debug</h3>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={disableCache}
+                          onChange={(e) => setDisableCache(e.target.checked)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">Disabilita Cache</span>
+                      </label>
+                      <p className="text-xs text-gray-500">
+                        {disableCache ? 'Cache disabilitata - ogni richiesta è nuova' : 'Cache abilitata - risultati salvati'}
+                      </p>
                     </div>
                   </div>
 
