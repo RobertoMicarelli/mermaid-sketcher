@@ -15,12 +15,17 @@ export default async function handler(req, res) {
     if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
     if (!imageData) return res.status(400).json({ error: 'Missing image data' });
 
-    // Crea una chiave di cache basata su hash dell'immagine + modello
-    const imageHash = Buffer.from(imageData, 'base64').toString('hex').substring(0, 32);
-    const cacheKey = `${imageHash}_${requestedModel}`;
+    // Crea una chiave di cache più specifica con hash completo + timestamp + modello
+    const crypto = require('crypto');
+    const imageHash = crypto.createHash('sha256').update(imageData).digest('hex');
+    const timestamp = Date.now();
+    const cacheKey = `${imageHash}_${timestamp}_${requestedModel}`;
     
-    // Controlla se abbiamo già un risultato in cache
-    if (ocrCache.has(cacheKey)) {
+    // Per debug: disabilita temporaneamente la cache
+    const disableCache = req.headers['x-disable-cache'] === 'true';
+    
+    // Controlla se abbiamo già un risultato in cache (solo se cache non disabilitata)
+    if (!disableCache && ocrCache.has(cacheKey)) {
       console.log('Risultato OCR trovato in cache per:', cacheKey.substring(0, 20) + '...');
       return res.status(200).json(ocrCache.get(cacheKey));
     }
@@ -414,8 +419,14 @@ Il codice deve essere pulito e pronto per essere copiato e incollato direttament
       .trim();
     
     const result = { mermaid, model: selectedModel, ocrText: text, analysisType: 'combined' };
-    ocrCache.set(cacheKey, result);
-    console.log('Risultato OCR combinato salvato in cache');
+    
+    // Salva in cache solo se non disabilitata
+    if (!disableCache) {
+      ocrCache.set(cacheKey, result);
+      console.log('Risultato OCR combinato salvato in cache');
+    } else {
+      console.log('Cache disabilitata - risultato non salvato');
+    }
     
     return res.status(200).json(result);
     
