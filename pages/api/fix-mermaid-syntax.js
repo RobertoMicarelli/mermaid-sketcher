@@ -3,10 +3,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { mermaidCode } = req.body;
+  const { mermaidCode, apiKey } = req.body;
 
   if (!mermaidCode) {
     return res.status(400).json({ error: 'Codice Mermaid richiesto' });
+  }
+
+  if (!apiKey) {
+    return res.status(400).json({ error: 'API Key richiesta' });
   }
 
   try {
@@ -22,7 +26,7 @@ Per favore correggi gli errori di sintassi secondo la versione Mermaid 11.10.0 e
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: 'gpt-4',

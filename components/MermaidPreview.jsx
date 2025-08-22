@@ -64,12 +64,22 @@ export default function MermaidPreview({ mermaidCode, onCodeUpdate }) {
     setError('');
 
     try {
+      const apiKey = typeof window !== 'undefined' ? sessionStorage.getItem('openai_api_key') : '';
+      if (!apiKey) {
+        setError('API Key non trovata. Imposta la OpenAI API Key nelle Impostazioni API.');
+        setIsFixing(false);
+        return;
+      }
+
       const response = await fetch('/api/fix-mermaid-syntax', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ mermaidCode })
+        body: JSON.stringify({ 
+          mermaidCode,
+          apiKey
+        })
       });
 
       if (!response.ok) {

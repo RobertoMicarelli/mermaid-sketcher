@@ -125,12 +125,22 @@ export default function Output() {
     setIsFixing(true);
     
     try {
+      const apiKey = typeof window !== 'undefined' ? sessionStorage.getItem('openai_api_key') : '';
+      if (!apiKey) {
+        alert('API Key non trovata. Imposta la OpenAI API Key nelle Impostazioni API.');
+        setIsFixing(false);
+        return;
+      }
+
       const response = await fetch('/api/fix-mermaid-syntax', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ mermaidCode: editedCode })
+        body: JSON.stringify({ 
+          mermaidCode: editedCode,
+          apiKey: apiKey
+        })
       });
 
       if (!response.ok) {
