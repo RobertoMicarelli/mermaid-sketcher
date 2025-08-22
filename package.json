@@ -2,7 +2,17 @@
   "name": "mermaid-sketcher",
   "version": "2.0.0",
   "description": "Trasforma i tuoi schizzi a mano libera in diagrammi Mermaid professionali con l'intelligenza artificiale",
-  "keywords": ["mermaid", "diagram", "ai", "ocr", "drawing", "flowchart", "nextjs", "react", "openai"],
+  "keywords": [
+    "mermaid",
+    "diagram",
+    "ai",
+    "ocr",
+    "drawing",
+    "flowchart",
+    "nextjs",
+    "react",
+    "openai"
+  ],
   "author": "Mermaid Sketcher Team",
   "license": "MIT",
   "private": true,
@@ -19,6 +29,7 @@
   },
   "dependencies": {
     "fabric": "^6.7.1",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.294.0",
     "mermaid": "^10.6.1",
     "next": "^14.0.0",

@@ -187,33 +187,29 @@ export default function Output() {
         throw new Error('SVG non generato');
       }
 
-      // Crea un canvas per convertire SVG in immagine
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      // Ottieni le dimensioni dell'SVG
-      const svgRect = svgElement.getBoundingClientRect();
-      const width = svgRect.width || 800; // Default se non disponibile
-      const height = svgRect.height || 600;
-      
-      // Imposta le dimensioni del canvas
-      canvas.width = width * 2; // 2x per migliore qualità
-      canvas.height = height * 2;
-      ctx.scale(2, 2);
+      // Aggiungi l'elemento al DOM temporaneamente (nascosto)
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '-9999px';
+      document.body.appendChild(tempDiv);
 
-      // Converti SVG in stringa
-      const svgData = new XMLSerializer().serializeToString(svgElement);
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svgBlob);
+      // Usa html2canvas per convertire l'elemento in canvas
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(tempDiv, {
+        backgroundColor: '#ffffff',
+        scale: 2, // 2x per migliore qualità
+        useCORS: true,
+        allowTaint: true,
+        width: svgElement.viewBox?.baseVal?.width || 800,
+        height: svgElement.viewBox?.baseVal?.height || 600
+      });
 
-      // Crea un'immagine dall'SVG
-      const img = new Image();
-      img.onload = () => {
-        // Disegna l'immagine sul canvas
-        ctx.drawImage(img, 0, 0);
-        
-        // Converti in formato richiesto
-        canvas.toBlob((blob) => {
+      // Rimuovi l'elemento temporaneo
+      document.body.removeChild(tempDiv);
+
+      // Converti il canvas in blob e scarica
+      canvas.toBlob((blob) => {
+        if (blob) {
           const downloadUrl = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = downloadUrl;
@@ -222,11 +218,11 @@ export default function Output() {
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(downloadUrl);
-        }, `image/${format}`);
-        
-        URL.revokeObjectURL(url);
-      };
-      img.src = url;
+        } else {
+          throw new Error('Impossibile generare il file');
+        }
+      }, `image/${format}`);
+
     } catch (err) {
       console.error('Download error:', err);
       alert('Errore durante il download: ' + err.message);
