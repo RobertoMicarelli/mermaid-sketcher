@@ -10,8 +10,6 @@ export default function Output() {
   const [ocrText, setOcrText] = useState('');
   const [analysisType, setAnalysisType] = useState('');
   const [mermaidLoaded, setMermaidLoaded] = useState(false);
-  const [mermaidError, setMermaidError] = useState('');
-  const [diagramRendered, setDiagramRendered] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const [editedCode, setEditedCode] = useState('');
 
@@ -49,16 +47,7 @@ export default function Output() {
     loadMermaid();
   }, []);
 
-  // Renderizza il diagramma quando Mermaid è caricato e il codice è disponibile
-  useEffect(() => {
-    if (mermaidLoaded && mermaidCode && !diagramRendered) {
-      console.log('🎯 useEffect: Pronto per rendering');
-      // Aggiungi un piccolo delay per assicurarsi che il DOM sia pronto
-      setTimeout(() => {
-        renderMermaidDiagram();
-      }, 100);
-    }
-  }, [mermaidLoaded, mermaidCode, diagramRendered]);
+
 
   // Inizializza l'editedCode quando il mermaidCode cambia
   useEffect(() => {
@@ -170,57 +159,7 @@ export default function Output() {
     }
   };
 
-  // Funzione per renderizzare il diagramma
-  const renderMermaidDiagram = async () => {
-    console.log('🎨 Iniziando rendering diagramma...');
-    console.log('📝 Codice Mermaid:', mermaidCode);
-    console.log('✅ Mermaid caricato:', mermaidLoaded);
-    console.log('🎯 Diagramma già renderizzato:', diagramRendered);
-    
-    if (!mermaidCode || !mermaidLoaded) {
-      console.log('❌ Prerequisiti non soddisfatti');
-      return;
-    }
 
-    // Evita rendering duplicati
-    if (diagramRendered) {
-      console.log('✅ Diagramma già renderizzato, skip');
-      return;
-    }
-
-    try {
-      setMermaidError('');
-      
-      // Aspetta che l'elemento sia disponibile nel DOM
-      let element = document.getElementById('mermaid-diagram');
-      let attempts = 0;
-      
-      while (!element && attempts < 10) {
-        console.log(`🔍 Tentativo ${attempts + 1} di trovare l'elemento container...`);
-        await new Promise(resolve => setTimeout(resolve, 50));
-        element = document.getElementById('mermaid-diagram');
-        attempts++;
-      }
-      
-      console.log('🔍 Elemento container:', element);
-      
-      if (element) {
-        element.innerHTML = '';
-        console.log('🔄 Rendering diagramma...');
-        const { svg } = await window.mermaid.render('mermaid-diagram', mermaidCode);
-        console.log('✅ SVG generato:', svg.substring(0, 100) + '...');
-        element.innerHTML = svg;
-        setDiagramRendered(true);
-        console.log('✅ Diagramma renderizzato con successo');
-      } else {
-        console.error('❌ Elemento container non trovato dopo tutti i tentativi');
-        setMermaidError('Container diagramma non disponibile');
-      }
-    } catch (error) {
-      console.error('❌ Errore rendering Mermaid:', error);
-      setMermaidError(`Errore nella visualizzazione del diagramma: ${error.message}`);
-    }
-  };
 
   return (
     <div className="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden">
@@ -289,7 +228,7 @@ export default function Output() {
                       <button 
                         onClick={() => setShowEditor(true)}
                         className="relative group w-full flex items-center justify-center gap-2 rounded-md h-12 sm:h-11 px-4 sm:px-5 bg-blue-100 text-blue-700 text-sm font-bold leading-normal tracking-wide shadow-sm hover:bg-blue-200 transition-colors" 
-                        title="Apri editor per modificare e visualizzare il diagramma."
+                        title="Guarda il grafico ottenuto e modifica se necessario il testo o il layout."
                       >
                         <svg className="size-6 sm:size-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -297,6 +236,9 @@ export default function Output() {
                         </svg>
                         <span>Editor + Preview</span>
                       </button>
+                      <p className="text-xs text-gray-600 text-center mt-2">
+                        Guarda il grafico ottenuto e modifica se necessario il testo o il layout
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -340,44 +282,7 @@ export default function Output() {
                     </div>
                   )}
                   
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <h3 className="text-lg font-semibold text-blue-800 mb-2">Anteprima del Diagramma</h3>
-                    <div className="bg-white border border-gray-200 rounded p-4">
-                      {!mermaidLoaded && !mermaidError && (
-                        <div className="text-center text-gray-500">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                          <p>Caricamento visualizzazione...</p>
-                        </div>
-                      )}
-                      
-                      {mermaidError && (
-                        <div className="text-center text-red-500">
-                          <svg className="mx-auto h-12 w-12 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                          </svg>
-                          <p className="text-sm">{mermaidError}</p>
-                          <p className="text-xs text-gray-500 mt-1">Il codice Mermaid è comunque valido e può essere copiato</p>
-                        </div>
-                      )}
-                      
-                      {mermaidLoaded && !mermaidError && (
-                        <div>
-                          <div id="mermaid-diagram" className="flex justify-center overflow-x-auto mb-4">
-                            {/* Il diagramma Mermaid verrà renderizzato qui */}
-                          </div>
-                          <button 
-                            onClick={() => {
-                              setDiagramRendered(false);
-                              setTimeout(() => renderMermaidDiagram(), 100);
-                            }}
-                            className="text-sm text-blue-600 hover:text-blue-800 underline"
-                          >
-                            🔄 Forza Rendering
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+
                   
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <h3 className="text-lg font-semibold text-green-800 mb-2">Note dall'Elaborazione</h3>
