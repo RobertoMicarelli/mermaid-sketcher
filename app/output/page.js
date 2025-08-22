@@ -49,7 +49,10 @@ export default function Output() {
   // Renderizza il diagramma quando Mermaid è caricato e il codice è disponibile
   useEffect(() => {
     if (mermaidLoaded && mermaidCode) {
-      renderMermaidDiagram();
+      // Aggiungi un piccolo delay per assicurarsi che il DOM sia pronto
+      setTimeout(() => {
+        renderMermaidDiagram();
+      }, 100);
     }
   }, [mermaidLoaded, mermaidCode]);
 
@@ -130,7 +133,18 @@ export default function Output() {
 
     try {
       setMermaidError('');
-      const element = document.getElementById('mermaid-diagram');
+      
+      // Aspetta che l'elemento sia disponibile nel DOM
+      let element = document.getElementById('mermaid-diagram');
+      let attempts = 0;
+      
+      while (!element && attempts < 10) {
+        console.log(`🔍 Tentativo ${attempts + 1} di trovare l'elemento container...`);
+        await new Promise(resolve => setTimeout(resolve, 50));
+        element = document.getElementById('mermaid-diagram');
+        attempts++;
+      }
+      
       console.log('🔍 Elemento container:', element);
       
       if (element) {
@@ -141,8 +155,8 @@ export default function Output() {
         element.innerHTML = svg;
         console.log('✅ Diagramma renderizzato con successo');
       } else {
-        console.error('❌ Elemento container non trovato');
-        setMermaidError('Container diagramma non trovato');
+        console.error('❌ Elemento container non trovato dopo tutti i tentativi');
+        setMermaidError('Container diagramma non disponibile');
       }
     } catch (error) {
       console.error('❌ Errore rendering Mermaid:', error);
