@@ -370,7 +370,6 @@ export default function Output() {
           </div>
         </main>
       </div>
-      )}
 
       {/* Modal Editor + Preview */}
       {showEditor && (
