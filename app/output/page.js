@@ -188,16 +188,23 @@ export default function Output() {
       }
 
       // Calcola le dimensioni per foglio A4 (794x1123 pixel a 96 DPI)
-      const svgRect = svgElement.getBoundingClientRect();
       const viewBox = svgElement.viewBox?.baseVal;
       
       // Dimensioni A4 in pixel (794x1123)
       const a4Width = 794;
       const a4Height = 1123;
       
-      // Calcola le proporzioni originali
-      const originalWidth = svgRect.width;
-      const originalHeight = svgRect.height;
+      // Usa viewBox se disponibile, altrimenti dimensioni di fallback
+      let originalWidth, originalHeight;
+      if (viewBox && viewBox.width > 0 && viewBox.height > 0) {
+        originalWidth = viewBox.width;
+        originalHeight = viewBox.height;
+      } else {
+        // Fallback su dimensioni standard se viewBox non disponibile
+        originalWidth = 800;
+        originalHeight = 600;
+      }
+      
       const aspectRatio = originalWidth / originalHeight;
       
       // Adatta alle dimensioni A4 mantenendo le proporzioni
@@ -223,8 +230,14 @@ export default function Output() {
           height = minDimension;
         }
       }
+      
+      // Validazione finale delle dimensioni
+      if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+        console.error('❌ Dimensioni non valide:', { width, height });
+        throw new Error('Dimensioni del diagramma non valide');
+      }
 
-      console.log('📏 Dimensioni A4 calcolate:', { width, height, originalWidth: svgRect.width, originalHeight: svgRect.height, aspectRatio });
+      console.log('📏 Dimensioni A4 calcolate:', { width, height, originalWidth, originalHeight, aspectRatio, viewBox: viewBox ? `${viewBox.width}x${viewBox.height}` : 'non disponibile' });
 
       // Aggiungi l'elemento al DOM temporaneamente (nascosto)
       tempDiv.style.position = 'absolute';
