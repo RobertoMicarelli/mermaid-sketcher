@@ -67,6 +67,45 @@ export default function Output() {
     }
   }, [mermaidCode, editedCode]);
 
+  // Renderizza la preview quando l'editedCode cambia
+  useEffect(() => {
+    if (showEditor && editedCode && mermaidLoaded) {
+      // Debounce per evitare troppi rendering
+      const timeoutId = setTimeout(() => {
+        renderEditorPreview(editedCode);
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [editedCode, showEditor, mermaidLoaded]);
+
+  // Funzione per renderizzare la preview nell'editor
+  const renderEditorPreview = async (code) => {
+    if (!code || !mermaidLoaded) return;
+
+    try {
+      const element = document.getElementById('editor-mermaid-preview');
+      if (element) {
+        element.innerHTML = '';
+        const { svg } = await window.mermaid.render('editor-preview', code);
+        element.innerHTML = svg;
+      }
+    } catch (error) {
+      console.error('Errore rendering preview editor:', error);
+      const element = document.getElementById('editor-mermaid-preview');
+      if (element) {
+        element.innerHTML = `
+          <div class="text-center text-red-500 p-4">
+            <svg class="mx-auto h-8 w-8 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <p class="text-sm">Errore nella sintassi Mermaid</p>
+          </div>
+        `;
+      }
+    }
+  };
+
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(mermaidCode);
   };
@@ -400,7 +439,10 @@ export default function Output() {
                   />
                   <div className="flex gap-2 mt-3">
                     <button 
-                      onClick={() => setEditedCode(mermaidCode)}
+                      onClick={() => {
+                        setEditedCode(mermaidCode);
+                        setTimeout(() => renderEditorPreview(mermaidCode), 100);
+                      }}
                       className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm"
                     >
                       Reset
