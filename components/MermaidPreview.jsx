@@ -113,6 +113,30 @@ export default function MermaidPreview({ mermaidCode, onCodeUpdate }) {
         throw new Error('SVG non trovato');
       }
 
+      // Calcola le dimensioni corrette dell'SVG
+      const svgRect = svgElement.getBoundingClientRect();
+      const viewBox = svgElement.viewBox?.baseVal;
+      
+      // Usa le dimensioni reali dell'SVG o fallback su dimensioni standard
+      let width = svgRect.width;
+      let height = svgRect.height;
+      
+      // Se le dimensioni sono troppo piccole, usa dimensioni minime
+      if (width < 400 || height < 300) {
+        width = Math.max(width, 800);
+        height = Math.max(height, 600);
+      }
+      
+      // Se le dimensioni sono troppo grandi, scala proporzionalmente
+      const maxDimension = 1200;
+      if (width > maxDimension || height > maxDimension) {
+        const ratio = Math.min(maxDimension / width, maxDimension / height);
+        width = width * ratio;
+        height = height * ratio;
+      }
+
+      console.log('📏 Dimensioni calcolate:', { width, height, originalWidth: svgRect.width, originalHeight: svgRect.height });
+
       // Usa html2canvas per convertire l'elemento in canvas
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(previewRef.current, {
@@ -120,8 +144,12 @@ export default function MermaidPreview({ mermaidCode, onCodeUpdate }) {
         scale: 2, // 2x per migliore qualità
         useCORS: true,
         allowTaint: true,
-        width: svgElement.viewBox?.baseVal?.width || 800,
-        height: svgElement.viewBox?.baseVal?.height || 600
+        width: width,
+        height: height,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: width,
+        windowHeight: height
       });
 
       // Converti il canvas in blob e scarica
@@ -135,6 +163,7 @@ export default function MermaidPreview({ mermaidCode, onCodeUpdate }) {
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(downloadUrl);
+          console.log('✅ Download completato con dimensioni:', { width: canvas.width, height: canvas.height });
         } else {
           throw new Error('Impossibile generare il file');
         }

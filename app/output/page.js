@@ -187,10 +187,36 @@ export default function Output() {
         throw new Error('SVG non generato');
       }
 
+      // Calcola le dimensioni corrette dell'SVG
+      const svgRect = svgElement.getBoundingClientRect();
+      const viewBox = svgElement.viewBox?.baseVal;
+      
+      // Usa le dimensioni reali dell'SVG o fallback su dimensioni standard
+      let width = svgRect.width;
+      let height = svgRect.height;
+      
+      // Se le dimensioni sono troppo piccole, usa dimensioni minime
+      if (width < 400 || height < 300) {
+        width = Math.max(width, 800);
+        height = Math.max(height, 600);
+      }
+      
+      // Se le dimensioni sono troppo grandi, scala proporzionalmente
+      const maxDimension = 1200;
+      if (width > maxDimension || height > maxDimension) {
+        const ratio = Math.min(maxDimension / width, maxDimension / height);
+        width = width * ratio;
+        height = height * ratio;
+      }
+
+      console.log('📏 Dimensioni calcolate:', { width, height, originalWidth: svgRect.width, originalHeight: svgRect.height });
+
       // Aggiungi l'elemento al DOM temporaneamente (nascosto)
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
       tempDiv.style.top = '-9999px';
+      tempDiv.style.width = `${width}px`;
+      tempDiv.style.height = `${height}px`;
       document.body.appendChild(tempDiv);
 
       // Usa html2canvas per convertire l'elemento in canvas
@@ -200,8 +226,12 @@ export default function Output() {
         scale: 2, // 2x per migliore qualità
         useCORS: true,
         allowTaint: true,
-        width: svgElement.viewBox?.baseVal?.width || 800,
-        height: svgElement.viewBox?.baseVal?.height || 600
+        width: width,
+        height: height,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: width,
+        windowHeight: height
       });
 
       // Rimuovi l'elemento temporaneo
@@ -218,6 +248,7 @@ export default function Output() {
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(downloadUrl);
+          console.log('✅ Download completato con dimensioni:', { width: canvas.width, height: canvas.height });
         } else {
           throw new Error('Impossibile generare il file');
         }
