@@ -12,6 +12,8 @@ export default function Output() {
   const [mermaidLoaded, setMermaidLoaded] = useState(false);
   const [mermaidError, setMermaidError] = useState('');
   const [diagramRendered, setDiagramRendered] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
+  const [editedCode, setEditedCode] = useState('');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -57,6 +59,13 @@ export default function Output() {
       }, 100);
     }
   }, [mermaidLoaded, mermaidCode, diagramRendered]);
+
+  // Inizializza l'editedCode quando il mermaidCode cambia
+  useEffect(() => {
+    if (mermaidCode && !editedCode) {
+      setEditedCode(mermaidCode);
+    }
+  }, [mermaidCode, editedCode]);
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(mermaidCode);
@@ -238,6 +247,17 @@ export default function Output() {
                         </svg>
                         <span>Salva come TXT</span>
                       </button>
+                      <button 
+                        onClick={() => setShowEditor(true)}
+                        className="relative group w-full flex items-center justify-center gap-2 rounded-md h-12 sm:h-11 px-4 sm:px-5 bg-blue-100 text-blue-700 text-sm font-bold leading-normal tracking-wide shadow-sm hover:bg-blue-200 transition-colors" 
+                        title="Apri editor per modificare e visualizzare il diagramma."
+                      >
+                        <svg className="size-6 sm:size-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        <span>Editor + Preview</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -350,6 +370,76 @@ export default function Output() {
           </div>
         </main>
       </div>
+      )}
+
+      {/* Modal Editor + Preview */}
+      {showEditor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-bold text-gray-800">Editor Mermaid + Preview</h2>
+              <button 
+                onClick={() => setShowEditor(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+              {/* Editor Panel */}
+              <div className="w-full lg:w-1/2 p-4 border-r">
+                <div className="h-full flex flex-col">
+                  <h3 className="text-lg font-semibold mb-3">Codice Mermaid</h3>
+                  <textarea
+                    value={editedCode}
+                    onChange={(e) => setEditedCode(e.target.value)}
+                    className="flex-1 p-4 border rounded-lg font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Modifica il codice Mermaid qui..."
+                  />
+                  <div className="flex gap-2 mt-3">
+                    <button 
+                      onClick={() => setEditedCode(mermaidCode)}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm"
+                    >
+                      Reset
+                    </button>
+                    <button 
+                      onClick={() => navigator.clipboard.writeText(editedCode)}
+                      className="px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 text-sm"
+                    >
+                      Copia
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Preview Panel */}
+              <div className="w-full lg:w-1/2 p-4">
+                <div className="h-full flex flex-col">
+                  <h3 className="text-lg font-semibold mb-3">Anteprima Diagramma</h3>
+                  <div className="flex-1 bg-gray-50 border rounded-lg p-4 overflow-auto">
+                    {editedCode ? (
+                      <div id="editor-mermaid-preview" className="flex justify-center">
+                        {/* Il diagramma verrà renderizzato qui */}
+                      </div>
+                    ) : (
+                      <div className="text-center text-gray-500 mt-8">
+                        <svg className="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p>Inserisci codice Mermaid per vedere l'anteprima</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
