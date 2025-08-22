@@ -31,7 +31,10 @@ export default function MermaidPreview({ mermaidCode, onCodeUpdate }) {
         startOnLoad: false,
         theme: 'default',
         securityLevel: 'loose',
-        fontFamily: 'Arial, sans-serif'
+        fontFamily: 'Arial, sans-serif',
+        mermaid: {
+          version: '11.10.0'
+        }
       });
 
       // Pulisci il contenitore

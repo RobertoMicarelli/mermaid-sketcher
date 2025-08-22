@@ -12,6 +12,8 @@ export default function Output() {
   const [mermaidLoaded, setMermaidLoaded] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const [editedCode, setEditedCode] = useState('');
+  const [isFixing, setIsFixing] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -45,6 +47,14 @@ export default function Output() {
   // Carica Mermaid quando il componente si monta
   useEffect(() => {
     loadMermaid();
+    
+    // Aggiungi la funzione globale per gestire il click dal preview
+    window.handleFixSyntaxFromPreview = handleFixSyntax;
+    
+    // Cleanup
+    return () => {
+      delete window.handleFixSyntaxFromPreview;
+    };
   }, []);
 
 
@@ -89,14 +99,63 @@ export default function Output() {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
             </svg>
             <p class="text-sm">Errore nella sintassi Mermaid</p>
+            <button 
+              onclick="window.handleFixSyntaxFromPreview()"
+              class="mt-3 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium flex items-center mx-auto"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              Correggi Automaticamente
+            </button>
           </div>
         `;
       }
+      // Mostra il modal di correzione
+      setShowErrorModal(true);
     }
   };
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(mermaidCode);
+  };
+
+  const handleFixSyntax = async () => {
+    setIsFixing(true);
+    
+    try {
+      const response = await fetch('/api/fix-mermaid-syntax', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mermaidCode: editedCode })
+      });
+
+      if (!response.ok) {
+        throw new Error('Errore nella correzione');
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.correctedMermaid) {
+        setEditedCode(data.correctedMermaid);
+        setMermaidCode(data.correctedMermaid);
+        setShowErrorModal(false);
+        // Re-renderizza la preview con il codice corretto
+        setTimeout(() => {
+          renderEditorPreview(data.correctedMermaid);
+        }, 100);
+      } else {
+        throw new Error('Impossibile correggere il codice');
+      }
+    } catch (err) {
+      console.error('Error fixing syntax:', err);
+      alert('Errore durante la correzione automatica: ' + err.message);
+    } finally {
+      setIsFixing(false);
+    }
   };
 
   const handleSaveAsTxt = () => {
@@ -382,6 +441,55 @@ export default function Output() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal per correzione errori di sintassi */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md mx-4">
+            <div className="flex items-center mb-4">
+              <svg className="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Errore di Sintassi Mermaid
+              </h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Il codice Mermaid contiene errori di sintassi. Vuoi che tenti una correzione automatica tramite AI?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleFixSyntax}
+                disabled={isFixing}
+                className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors font-medium flex items-center justify-center"
+              >
+                {isFixing ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Correggendo...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Correggi
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setShowErrorModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors font-medium"
+              >
+                Annulla
+              </button>
             </div>
           </div>
         </div>

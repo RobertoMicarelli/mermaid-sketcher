@@ -10,13 +10,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    const prompt = `E' stato generato questo codice Mermaid ma ci sono errori di sintassi, puoi controllare con attenzione il codice in base alle specifiche https://mermaid.js.org/intro/syntax-reference.html#syntax-structure :
+    const prompt = `E' stato generato questo codice Mermaid ma ci sono errori di sintassi, puoi controllare con attenzione il codice in base alle specifiche Mermaid versione 11.10.0: https://mermaid.js.org/intro/syntax-reference.html#syntax-structure :
 
 ECCO IL CODICE:
 
 ${mermaidCode}
 
-Per favore correggi gli errori di sintassi e restituisci SOLO il codice Mermaid corretto, senza spiegazioni aggiuntive.`;
+Per favore correggi gli errori di sintassi secondo la versione Mermaid 11.10.0 e restituisci SOLO il codice Mermaid corretto, senza spiegazioni aggiuntive.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
