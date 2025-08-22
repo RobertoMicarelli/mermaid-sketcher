@@ -187,29 +187,44 @@ export default function Output() {
         throw new Error('SVG non generato');
       }
 
-      // Calcola le dimensioni corrette dell'SVG
+      // Calcola le dimensioni per foglio A4 (794x1123 pixel a 96 DPI)
       const svgRect = svgElement.getBoundingClientRect();
       const viewBox = svgElement.viewBox?.baseVal;
       
-      // Usa le dimensioni reali dell'SVG o fallback su dimensioni standard
-      let width = svgRect.width;
-      let height = svgRect.height;
+      // Dimensioni A4 in pixel (794x1123)
+      const a4Width = 794;
+      const a4Height = 1123;
       
-      // Se le dimensioni sono troppo piccole, usa dimensioni minime
-      if (width < 400 || height < 300) {
-        width = Math.max(width, 800);
-        height = Math.max(height, 600);
+      // Calcola le proporzioni originali
+      const originalWidth = svgRect.width;
+      const originalHeight = svgRect.height;
+      const aspectRatio = originalWidth / originalHeight;
+      
+      // Adatta alle dimensioni A4 mantenendo le proporzioni
+      let width, height;
+      if (aspectRatio > a4Width / a4Height) {
+        // Larghezza è il fattore limitante
+        width = a4Width;
+        height = a4Width / aspectRatio;
+      } else {
+        // Altezza è il fattore limitante
+        height = a4Height;
+        width = a4Height * aspectRatio;
       }
       
-      // Se le dimensioni sono troppo grandi, scala proporzionalmente
-      const maxDimension = 1200;
-      if (width > maxDimension || height > maxDimension) {
-        const ratio = Math.min(maxDimension / width, maxDimension / height);
-        width = width * ratio;
-        height = height * ratio;
+      // Assicurati che le dimensioni non siano troppo piccole
+      const minDimension = 400;
+      if (width < minDimension || height < minDimension) {
+        if (width < height) {
+          height = (height / width) * minDimension;
+          width = minDimension;
+        } else {
+          width = (width / height) * minDimension;
+          height = minDimension;
+        }
       }
 
-      console.log('📏 Dimensioni calcolate:', { width, height, originalWidth: svgRect.width, originalHeight: svgRect.height });
+      console.log('📏 Dimensioni A4 calcolate:', { width, height, originalWidth: svgRect.width, originalHeight: svgRect.height, aspectRatio });
 
       // Aggiungi l'elemento al DOM temporaneamente (nascosto)
       tempDiv.style.position = 'absolute';
