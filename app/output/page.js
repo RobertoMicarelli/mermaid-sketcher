@@ -9,6 +9,8 @@ export default function Output() {
   const [usedModel, setUsedModel] = useState('');
   const [ocrText, setOcrText] = useState('');
   const [analysisType, setAnalysisType] = useState('');
+  const [mermaidLoaded, setMermaidLoaded] = useState(false);
+  const [mermaidError, setMermaidError] = useState('');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -39,6 +41,18 @@ export default function Output() {
     }
   }, [router]);
 
+  // Carica Mermaid quando il componente si monta
+  useEffect(() => {
+    loadMermaid();
+  }, []);
+
+  // Renderizza il diagramma quando Mermaid è caricato e il codice è disponibile
+  useEffect(() => {
+    if (mermaidLoaded && mermaidCode) {
+      renderMermaidDiagram();
+    }
+  }, [mermaidLoaded, mermaidCode]);
+
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(mermaidCode);
   };
@@ -51,6 +65,60 @@ export default function Output() {
     a.download = 'mermaid-diagram.mmd';
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  // Funzione per caricare Mermaid.js dinamicamente
+  const loadMermaid = async () => {
+    try {
+      if (window.mermaid) {
+        setMermaidLoaded(true);
+        return;
+      }
+
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/mermaid@11.10.0/dist/mermaid.min.js';
+        script.onload = () => {
+          if (window.mermaid) {
+            window.mermaid.initialize({
+              startOnLoad: false,
+              theme: 'default',
+              flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+              }
+            });
+            setMermaidLoaded(true);
+            resolve();
+          } else {
+            reject(new Error('Mermaid non caricato correttamente'));
+          }
+        };
+        script.onerror = () => reject(new Error('Errore caricamento Mermaid'));
+        document.head.appendChild(script);
+      });
+    } catch (error) {
+      console.warn('Errore caricamento Mermaid:', error);
+      setMermaidError('Impossibile caricare la visualizzazione del diagramma');
+    }
+  };
+
+  // Funzione per renderizzare il diagramma
+  const renderMermaidDiagram = async () => {
+    if (!mermaidCode || !mermaidLoaded) return;
+
+    try {
+      setMermaidError('');
+      const element = document.getElementById('mermaid-diagram');
+      if (element) {
+        element.innerHTML = '';
+        const { svg } = await window.mermaid.render('mermaid-diagram', mermaidCode);
+        element.innerHTML = svg;
+      }
+    } catch (error) {
+      console.error('Errore rendering Mermaid:', error);
+      setMermaidError('Errore nella visualizzazione del diagramma');
+    }
   };
 
   return (
@@ -162,11 +230,29 @@ export default function Output() {
                   
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                     <h3 className="text-lg font-semibold text-blue-800 mb-2">Anteprima del Diagramma</h3>
-                    <div className="bg-white border border-gray-200 rounded p-4 text-center text-gray-500">
-                      <svg className="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                      </svg>
-                      <p>L'anteprima del diagramma Mermaid verrà mostrata qui</p>
+                    <div className="bg-white border border-gray-200 rounded p-4">
+                      {!mermaidLoaded && !mermaidError && (
+                        <div className="text-center text-gray-500">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                          <p>Caricamento visualizzazione...</p>
+                        </div>
+                      )}
+                      
+                      {mermaidError && (
+                        <div className="text-center text-red-500">
+                          <svg className="mx-auto h-12 w-12 text-red-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                          </svg>
+                          <p className="text-sm">{mermaidError}</p>
+                          <p className="text-xs text-gray-500 mt-1">Il codice Mermaid è comunque valido e può essere copiato</p>
+                        </div>
+                      )}
+                      
+                      {mermaidLoaded && !mermaidError && (
+                        <div id="mermaid-diagram" className="flex justify-center overflow-x-auto">
+                          {/* Il diagramma Mermaid verrà renderizzato qui */}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
