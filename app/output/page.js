@@ -168,6 +168,71 @@ export default function Output() {
     }
   };
 
+  const downloadAsImage = async (format = 'png') => {
+    if (!editedCode || editedCode.startsWith('//')) {
+      alert('Nessun diagramma da scaricare');
+      return;
+    }
+
+    try {
+      // Renderizza il diagramma per ottenere l'SVG
+      const { svg } = await window.mermaid.render('download-diagram', editedCode);
+      
+      // Crea un elemento temporaneo per l'SVG
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = svg;
+      const svgElement = tempDiv.querySelector('svg');
+      
+      if (!svgElement) {
+        throw new Error('SVG non generato');
+      }
+
+      // Crea un canvas per convertire SVG in immagine
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Ottieni le dimensioni dell'SVG
+      const svgRect = svgElement.getBoundingClientRect();
+      const width = svgRect.width || 800; // Default se non disponibile
+      const height = svgRect.height || 600;
+      
+      // Imposta le dimensioni del canvas
+      canvas.width = width * 2; // 2x per migliore qualità
+      canvas.height = height * 2;
+      ctx.scale(2, 2);
+
+      // Converti SVG in stringa
+      const svgData = new XMLSerializer().serializeToString(svgElement);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      // Crea un'immagine dall'SVG
+      const img = new Image();
+      img.onload = () => {
+        // Disegna l'immagine sul canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Converti in formato richiesto
+        canvas.toBlob((blob) => {
+          const downloadUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = `mermaid-diagram.${format}`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(downloadUrl);
+        }, `image/${format}`);
+        
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    } catch (err) {
+      console.error('Download error:', err);
+      alert('Errore durante il download: ' + err.message);
+    }
+  };
+
   const handleSaveAsTxt = () => {
     const blob = new Blob([mermaidCode], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -270,30 +335,40 @@ export default function Output() {
                 <div className="space-y-6">
                   <div className="border-t border-[#d1d5db] pt-6">
                     <h2 className="text-xl sm:text-2xl font-semibold mb-2">Codice Generato</h2>
-                    <div className="mt-4 flex flex-col gap-3">
-                      <button 
-                        onClick={handleCopyToClipboard}
-                        className="relative group w-full flex items-center justify-center gap-2 rounded-md h-12 sm:h-11 px-4 sm:px-5 bg-gray-100 text-[#111418] text-sm font-bold leading-normal tracking-wide shadow-sm hover:bg-gray-200 transition-colors" 
-                        title="Copia il codice Mermaid negli appunti."
-                      >
-                        <svg className="size-6 sm:size-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <rect height="14" rx="2" ry="2" width="14" x="8" y="8"></rect>
-                          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
-                        </svg>
-                        <span>Copia negli Appunti</span>
-                      </button>
-                      <button 
-                        onClick={handleSaveAsTxt}
-                        className="relative group w-full flex items-center justify-center gap-2 rounded-md h-12 sm:h-11 px-4 sm:px-5 bg-gray-100 text-[#111418] text-sm font-bold leading-normal tracking-wide shadow-sm hover:bg-gray-200 transition-colors" 
-                        title="Salva il codice Mermaid come file di testo."
-                      >
-                        <svg className="size-6 sm:size-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="7 10 12 15 17 10"></polyline>
-                          <line x1="12" x2="12" y1="15" y2="3"></line>
-                        </svg>
-                        <span>Salva come TXT</span>
-                      </button>
+                                      <div className="mt-4 flex flex-col gap-3">
+                    <button 
+                      onClick={handleCopyToClipboard}
+                      className="relative group w-full flex items-center justify-center gap-2 rounded-md h-12 sm:h-11 px-4 sm:px-5 bg-gray-100 text-[#111418] text-sm font-bold leading-normal tracking-wide shadow-sm hover:bg-gray-200 transition-colors" 
+                      title="Copia il codice Mermaid negli appunti."
+                    >
+                      <svg className="size-6 sm:size-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <rect height="14" rx="2" ry="2" width="14" x="8" y="8"></rect>
+                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+                      </svg>
+                      <span>Copia negli Appunti</span>
+                    </button>
+                    <button 
+                      onClick={handleSaveAsTxt}
+                      className="relative group w-full flex items-center justify-center gap-2 rounded-md h-12 sm:h-11 px-4 sm:px-5 bg-gray-100 text-[#111418] text-sm font-bold leading-normal tracking-wide shadow-sm hover:bg-gray-200 transition-colors" 
+                      title="Salva il codice Mermaid come file di testo."
+                    >
+                      <svg className="size-6 sm:size-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" x2="12" y1="15" y2="3"></line>
+                      </svg>
+                      <span>Salva come TXT</span>
+                    </button>
+                    <button 
+                      onClick={() => downloadAsImage('png')}
+                      className="relative group w-full flex items-center justify-center gap-2 rounded-md h-12 sm:h-11 px-4 sm:px-5 bg-green-100 text-green-700 text-sm font-bold leading-normal tracking-wide shadow-sm hover:bg-green-200 transition-colors" 
+                      title="Scarica il diagramma come immagine PNG."
+                    >
+                      <svg className="size-6 sm:size-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      <span>Scarica PNG</span>
+                    </button>
                       <button 
                         onClick={() => setShowEditor(true)}
                         className="relative group w-full flex items-center justify-center gap-2 rounded-md h-12 sm:h-11 px-4 sm:px-5 bg-blue-100 text-blue-700 text-sm font-bold leading-normal tracking-wide shadow-sm hover:bg-blue-200 transition-colors" 
@@ -426,6 +501,15 @@ export default function Output() {
                       className="px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 text-sm"
                     >
                       Copia
+                    </button>
+                    <button 
+                      onClick={() => downloadAsImage('png')}
+                      className="px-4 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 text-sm flex items-center"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      PNG
                     </button>
                   </div>
                 </div>
