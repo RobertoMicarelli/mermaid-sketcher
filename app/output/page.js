@@ -70,7 +70,10 @@ export default function Output() {
   // Funzione per caricare Mermaid.js dinamicamente
   const loadMermaid = async () => {
     try {
+      console.log('🔄 Iniziando caricamento Mermaid...');
+      
       if (window.mermaid) {
+        console.log('✅ Mermaid già caricato');
         setMermaidLoaded(true);
         return;
       }
@@ -78,8 +81,11 @@ export default function Output() {
       return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/mermaid@11.10.0/dist/mermaid.min.js';
+        
         script.onload = () => {
+          console.log('📦 Script Mermaid caricato');
           if (window.mermaid) {
+            console.log('⚙️ Inizializzando Mermaid...');
             window.mermaid.initialize({
               startOnLoad: false,
               theme: 'default',
@@ -88,36 +94,59 @@ export default function Output() {
                 htmlLabels: true
               }
             });
+            console.log('✅ Mermaid inizializzato con successo');
             setMermaidLoaded(true);
             resolve();
           } else {
+            console.error('❌ Mermaid non disponibile dopo caricamento');
             reject(new Error('Mermaid non caricato correttamente'));
           }
         };
-        script.onerror = () => reject(new Error('Errore caricamento Mermaid'));
+        
+        script.onerror = (error) => {
+          console.error('❌ Errore caricamento script Mermaid:', error);
+          reject(new Error('Errore caricamento Mermaid'));
+        };
+        
         document.head.appendChild(script);
+        console.log('📎 Script Mermaid aggiunto al DOM');
       });
     } catch (error) {
-      console.warn('Errore caricamento Mermaid:', error);
+      console.error('❌ Errore caricamento Mermaid:', error);
       setMermaidError('Impossibile caricare la visualizzazione del diagramma');
     }
   };
 
   // Funzione per renderizzare il diagramma
   const renderMermaidDiagram = async () => {
-    if (!mermaidCode || !mermaidLoaded) return;
+    console.log('🎨 Iniziando rendering diagramma...');
+    console.log('📝 Codice Mermaid:', mermaidCode);
+    console.log('✅ Mermaid caricato:', mermaidLoaded);
+    
+    if (!mermaidCode || !mermaidLoaded) {
+      console.log('❌ Prerequisiti non soddisfatti');
+      return;
+    }
 
     try {
       setMermaidError('');
       const element = document.getElementById('mermaid-diagram');
+      console.log('🔍 Elemento container:', element);
+      
       if (element) {
         element.innerHTML = '';
+        console.log('🔄 Rendering diagramma...');
         const { svg } = await window.mermaid.render('mermaid-diagram', mermaidCode);
+        console.log('✅ SVG generato:', svg.substring(0, 100) + '...');
         element.innerHTML = svg;
+        console.log('✅ Diagramma renderizzato con successo');
+      } else {
+        console.error('❌ Elemento container non trovato');
+        setMermaidError('Container diagramma non trovato');
       }
     } catch (error) {
-      console.error('Errore rendering Mermaid:', error);
-      setMermaidError('Errore nella visualizzazione del diagramma');
+      console.error('❌ Errore rendering Mermaid:', error);
+      setMermaidError(`Errore nella visualizzazione del diagramma: ${error.message}`);
     }
   };
 
@@ -249,8 +278,16 @@ export default function Output() {
                       )}
                       
                       {mermaidLoaded && !mermaidError && (
-                        <div id="mermaid-diagram" className="flex justify-center overflow-x-auto">
-                          {/* Il diagramma Mermaid verrà renderizzato qui */}
+                        <div>
+                          <div id="mermaid-diagram" className="flex justify-center overflow-x-auto mb-4">
+                            {/* Il diagramma Mermaid verrà renderizzato qui */}
+                          </div>
+                          <button 
+                            onClick={renderMermaidDiagram}
+                            className="text-sm text-blue-600 hover:text-blue-800 underline"
+                          >
+                            🔄 Forza Rendering
+                          </button>
                         </div>
                       )}
                     </div>
