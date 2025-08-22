@@ -5,6 +5,9 @@
     },
     "pages/api/generate-mermaid.js": {
       "maxDuration": 60
+    },
+    "pages/api/fix-mermaid-syntax.js": {
+      "maxDuration": 30
     }
   },
   "build": {

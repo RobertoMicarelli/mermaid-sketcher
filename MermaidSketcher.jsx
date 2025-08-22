@@ -20,6 +20,7 @@ import {
   Eye,
   Settings
 } from 'lucide-react';
+import MermaidPreview from './components/MermaidPreview';
 
 export default function MermaidSketcher() {
   const [canvasText, setCanvasText] = useState('');
@@ -34,7 +35,6 @@ export default function MermaidSketcher() {
   const [brushSize, setBrushSize] = useState(3);
   const [brushColor, setBrushColor] = useState('#3b82f6');
   const [activeTab, setActiveTab] = useState('text');
-  const [showPreview, setShowPreview] = useState(false);
 
   // Esempi predefiniti migliorati
   const examples = [
@@ -103,7 +103,6 @@ export default function MermaidSketcher() {
       
       setMermaidCode(data.mermaid);
       setSuccess('🎉 Diagramma Mermaid generato con successo!');
-      setShowPreview(true);
     } catch (error) {
       console.error('Conversion error:', error);
       setError('❌ Errore nella conversione: ' + error.message);
@@ -159,7 +158,6 @@ export default function MermaidSketcher() {
       
       setMermaidCode(data.mermaid);
       setSuccess('🔍 OCR completato con successo!');
-      setShowPreview(true);
     } catch (error) {
       console.error('OCR error:', error);
       setError('❌ Errore OCR: ' + error.message);
@@ -175,7 +173,6 @@ export default function MermaidSketcher() {
     setError('');
     setSuccess('');
     setCopied(false);
-    setShowPreview(false);
     const canvas = canvasRef.current;
     if (canvas) {
       const ctx = canvas.getContext('2d');
@@ -183,6 +180,12 @@ export default function MermaidSketcher() {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
+  };
+
+  const handleCodeUpdate = (newCode) => {
+    setMermaidCode(newCode);
+    setSuccess('🎉 Codice Mermaid corretto automaticamente!');
+    setError('');
   };
 
   const handleImageUpload = (e) => {
@@ -728,29 +731,12 @@ export default function MermaidSketcher() {
                 placeholder="Il codice Mermaid generato apparirà qui..."
               />
 
-              {/* Preview Toggle */}
+              {/* Preview Component */}
               {mermaidCode && !mermaidCode.startsWith('//') && (
-                <div className="mt-6">
-                  <button
-                    onClick={() => setShowPreview(!showPreview)}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors font-medium"
-                  >
-                    <Eye className="w-4 h-4" />
-                    {showPreview ? 'Nascondi' : 'Mostra'} Anteprima
-                  </button>
-                  
-                  {showPreview && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-                      <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <Settings className="w-4 h-4 mr-2" />
-                        Anteprima del diagramma:
-                      </h3>
-                      <div className="bg-white p-4 rounded-lg border">
-                        <pre className="text-xs text-gray-600 whitespace-pre-wrap font-mono">{mermaidCode}</pre>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <MermaidPreview 
+                  mermaidCode={mermaidCode} 
+                  onCodeUpdate={handleCodeUpdate}
+                />
               )}
             </div>
           </div>
