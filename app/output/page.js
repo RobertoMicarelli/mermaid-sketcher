@@ -11,6 +11,7 @@ export default function Output() {
   const [analysisType, setAnalysisType] = useState('');
   const [mermaidLoaded, setMermaidLoaded] = useState(false);
   const [mermaidError, setMermaidError] = useState('');
+  const [diagramRendered, setDiagramRendered] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -48,13 +49,14 @@ export default function Output() {
 
   // Renderizza il diagramma quando Mermaid è caricato e il codice è disponibile
   useEffect(() => {
-    if (mermaidLoaded && mermaidCode) {
+    if (mermaidLoaded && mermaidCode && !diagramRendered) {
+      console.log('🎯 useEffect: Pronto per rendering');
       // Aggiungi un piccolo delay per assicurarsi che il DOM sia pronto
       setTimeout(() => {
         renderMermaidDiagram();
       }, 100);
     }
-  }, [mermaidLoaded, mermaidCode]);
+  }, [mermaidLoaded, mermaidCode, diagramRendered]);
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(mermaidCode);
@@ -125,9 +127,16 @@ export default function Output() {
     console.log('🎨 Iniziando rendering diagramma...');
     console.log('📝 Codice Mermaid:', mermaidCode);
     console.log('✅ Mermaid caricato:', mermaidLoaded);
+    console.log('🎯 Diagramma già renderizzato:', diagramRendered);
     
     if (!mermaidCode || !mermaidLoaded) {
       console.log('❌ Prerequisiti non soddisfatti');
+      return;
+    }
+
+    // Evita rendering duplicati
+    if (diagramRendered) {
+      console.log('✅ Diagramma già renderizzato, skip');
       return;
     }
 
@@ -153,6 +162,7 @@ export default function Output() {
         const { svg } = await window.mermaid.render('mermaid-diagram', mermaidCode);
         console.log('✅ SVG generato:', svg.substring(0, 100) + '...');
         element.innerHTML = svg;
+        setDiagramRendered(true);
         console.log('✅ Diagramma renderizzato con successo');
       } else {
         console.error('❌ Elemento container non trovato dopo tutti i tentativi');
@@ -297,7 +307,10 @@ export default function Output() {
                             {/* Il diagramma Mermaid verrà renderizzato qui */}
                           </div>
                           <button 
-                            onClick={renderMermaidDiagram}
+                            onClick={() => {
+                              setDiagramRendered(false);
+                              setTimeout(() => renderMermaidDiagram(), 100);
+                            }}
                             className="text-sm text-blue-600 hover:text-blue-800 underline"
                           >
                             🔄 Forza Rendering
