@@ -4,11 +4,13 @@
 
 @layer base {
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
   
   body {
-    background-color: #f9fafb;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #e8eaed;
+    min-height: 100vh;
   }
 }
 
