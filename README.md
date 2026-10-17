@@ -71,6 +71,6 @@ Le proposte sono benvenute: leggi [CONTRIBUTING.md](CONTRIBUTING.md) e il [codic
 
 ---
 
-**AI-utati** · By Roberto Micarelli · Formatore, Coach, Consulente · [ai-utati.it](https://www.ai-utati.it)
+**AI-utati** · By Roberto Micarelli · Formatore, Coach, Consulente · [ai-utati.it](https://www.ai-utati.it) · [Scheda sul sito](https://www.ai-utati.it/risorse/mermaid-sketcher/) · [Tutti i progetti](https://github.com/RobertoMicarelli/brand-ai-utati)
 
 **Provalo ora:** disegna tre scatole e due frecce, e guarda che codice esce.
